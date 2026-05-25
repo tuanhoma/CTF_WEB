@@ -11,8 +11,8 @@ USE myapp_db;
 CREATE TABLE IF NOT EXISTS users (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
     username        VARCHAR(50) UNIQUE NOT NULL,
-    email           VARCHAR(100) UNIQUE NOT NULL,
     password        VARCHAR(255) NOT NULL,
+    email           VARCHAR(100) UNIQUE NOT NULL,
     role            ENUM('admin', 'user', 'moderator') DEFAULT 'user',
     avatar          VARCHAR(255) NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -20,6 +20,16 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_email (email),
     INDEX idx_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `users` (`id`, `username`, `password`, `email`) VALUES (1, 'admin', '123456', 'admin@gmail.com');
+INSERT INTO `users` (`id`, `username`, `password`, `email`) VALUES (2, 'tuan', '123456', 'tuan@gmail.com');
+INSERT INTO `users` (`id`, `username`, `password`, `email`) VALUES (3, 'meow', '123456', 'meow@gmail.com');
+INSERT INTO `users` (`id`, `username`, `password`, `email`) VALUES (4, 'bo8', '123456', 'bo8@gmail.com');
+INSERT INTO `users` (`id`, `username`, `password`, `email`) VALUES (5, 'tu', '123456', 'tu@gmail.com');
+INSERT INTO `users` (`id`, `username`, `password`, `email`) VALUES (6, 'tung', '123456', 'tung@gmail.com');
+INSERT INTO `users` (`id`, `username`, `password`, `email`) VALUES (7, 'trong', '123456', 'trong@gmail.com');
+INSERT INTO `users` (`id`, `username`, `password`, `email`) VALUES (8, 'anh', '123456', 'anh@gmail.com');
+
 
 -- =============================================
 -- Table: tickets

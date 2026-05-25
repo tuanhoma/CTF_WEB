@@ -1,12 +1,12 @@
-# MySQL DATABASE
 version: "3.9"
 
 services:
+  # ==================== DATABASE ====================
   mysql:
     image: mysql:8.0
-    container_name: myapp-mysql # Đặt tên container
-    restart: always # Tự khởi động lại container khi máy tắt or restart
-    environment: # thiết lập các biến môi trường cho MySQL
+    container_name: myapp-mysql
+    restart: always
+    environment:
       MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: myapp_db
       MYSQL_USER: devuser
@@ -14,8 +14,8 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql # Lưu dữ liệu database vĩnh viễn (không bị mất khi tắt container).
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Copy file init.sql vào container và tự động chạy khi database khởi tạo lần đầu.
+      - mysql-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     command: --default-authentication-plugin=mysql_native_password
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
@@ -33,23 +33,16 @@ services:
     depends_on:
       - mysql
 
-volumes:
-  mysql-data:
-
-
-
-
-# nginx
-version: '3.9'
-
-services:
-
+  # ==================== WEB SERVICES ====================
   nginx:
     build: ./nginx
+    container_name: myapp-nginx
     ports:
       - "80:80"
     volumes:
-      - ./portal/public:/var/www/public
+      - ./portal/public:/var/www/portal/public # ← Quan trọng
+      - ./api/public:/var/www/api/public
+      - ./internal-api/public:/var/www/internal-api/public
       - ./nginx/logs:/var/log/nginx
     depends_on:
       - portal
@@ -57,16 +50,32 @@ services:
       - internal-api
 
   portal:
-    image: php:8.2-fpm
+    build: ./portal
+    container_name: myapp-portal
+    environment:
+      MYSQL_HOSTNAME: mysql
+      MYSQL_USER: devuser
+      MYSQL_PASSWORD: devpass123
     volumes:
-      - ./portal/public:/var/www/public
+      - ./portal:/var/www/portal
+    depends_on:
+      - mysql
 
   api:
     image: php:8.2-fpm
+    container_name: myapp-api
     volumes:
-      - ./api/public:/var/www/public
+      - ./api:/var/www/api
+    depends_on:
+      - mysql
 
   internal-api:
     image: php:8.2-fpm
+    container_name: myapp-internal-api
     volumes:
-      - ./internal-api/public:/var/www/public
+      - ./internal-api:/var/www/internal-api
+    depends_on:
+      - mysql
+
+volumes:
+  mysql-data:

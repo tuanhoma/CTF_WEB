@@ -1,3 +1,2 @@
 <?php
-
-echo "<h1>Portal is running</h1>";
+include("../app/views/index.php");
