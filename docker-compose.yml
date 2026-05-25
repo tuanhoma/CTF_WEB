@@ -35,3 +35,38 @@ services:
 
 volumes:
   mysql-data:
+
+
+
+
+# nginx
+version: '3.9'
+
+services:
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./portal/public:/var/www/public
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - portal
+      - api
+      - internal-api
+
+  portal:
+    image: php:8.2-fpm
+    volumes:
+      - ./portal/public:/var/www/public
+
+  api:
+    image: php:8.2-fpm
+    volumes:
+      - ./api/public:/var/www/public
+
+  internal-api:
+    image: php:8.2-fpm
+    volumes:
+      - ./internal-api/public:/var/www/public
