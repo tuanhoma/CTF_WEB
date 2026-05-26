@@ -15,7 +15,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     command: --default-authentication-plugin=mysql_native_password
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
@@ -50,12 +50,8 @@ services:
       - internal-api
 
   portal:
-    build: ./portal
+    build: php:8.2-fpm
     container_name: myapp-portal
-    environment:
-      MYSQL_HOSTNAME: mysql
-      MYSQL_USER: devuser
-      MYSQL_PASSWORD: devpass123
     volumes:
       - ./portal:/var/www/portal
     depends_on:

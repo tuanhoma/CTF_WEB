@@ -67,4 +67,25 @@ class User
             return "Database error: " . $e->getMessage();
         }
     }
+
+
+    public function register($username, $password, $email)
+    {
+        try {
+            $database = make_connection("myapp_db");
+            $sql = "INSERT INTO users (username, password, email) VALUES ($username, $password, $email);";
+
+            $stmt = $database->prepare($sql);
+            $stmt->bind_param("sss", $username, $password, $email);
+
+            $result = $stmt->execute();
+
+            $stmt->close();
+
+            return $result;   // true nếu insert thành công, false nếu thất bại
+
+        } catch (mysqli_sql_exception $e) {
+            return "Database error: " . $e->getMessage();
+        }
+    }
 }

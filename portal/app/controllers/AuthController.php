@@ -34,4 +34,34 @@ class AuthController
         }
         return $message;
     }
+
+
+
+    public function register()
+    {
+        $message = "";
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $username = $_POST['username'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $email = $_POST['email'] ?? '';
+
+            if (empty($username) || empty($password) || empty($email)) {
+                return "Vui lòng nhập đầy đủ username và password!";
+            }
+
+            $userModel = new User();
+            $check = $userModel->findUserByUsername($username);
+            if (empty($check) || $check == false) {
+                return "User đã tồn tại!";
+            }
+            $result = $userModel->register($username, $password, $email);
+
+            if ($result === true) {
+                $message = "Đăng ký thành công!";
+            } else {
+                $message = "Đăng ký Không thành công!"; // Thông báo lỗi
+            }
+        }
+        return $message;
+    }
 }

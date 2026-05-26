@@ -1,2 +1,2 @@
 <?php
-include("../app/views/index.php");
+include("../app/views/index.html");
