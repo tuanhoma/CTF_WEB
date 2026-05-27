@@ -1,77 +1,133 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  # ==================== DATABASE ====================
-  mysql:
-    image: mysql:8.0
-    container_name: myapp-mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root123
-      MYSQL_DATABASE: myapp_db
-      MYSQL_USER: devuser
-      MYSQL_PASSWORD: devpass123
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    command: --default-authentication-plugin=mysql_native_password
-      --character-set-server=utf8mb4
-      --collation-server=utf8mb4_unicode_ci
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    container_name: myapp-phpmyadmin
-    restart: always
-    environment:
-      PMA_HOST: mysql
-      PMA_USER: devuser
-      PMA_PASSWORD: devpass123
-    ports:
-      - "8080:80"
-    depends_on:
-      - mysql
-
-  # ==================== WEB SERVICES ====================
   nginx:
-    build: ./nginx
-    container_name: myapp-nginx
+    image: nginx:alpine
     ports:
       - "80:80"
-    volumes:
-      - ./portal/public:/var/www/portal/public # ← Quan trọng
-      - ./api/public:/var/www/api/public
-      - ./internal-api/public:/var/www/internal-api/public
-      - ./nginx/logs:/var/log/nginx
     depends_on:
       - portal
       - api
+      - staff
       - internal-api
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+      - ./uploads:/var/www/uploads
+      - nginx-logs:/var/log/nginx
+    networks:
+      public-net:
+        aliases:
+          - portal.lab.local
+          - staff.lab.local
+          - api.lab.local
+          - cdn.lab.local
+          - internal-api.lab.local
+      private-net:
+        aliases:
+          - portal.lab.local
+          - staff.lab.local
+          - api.lab.local
+          - cdn.lab.local
+          - internal-api.lab.local
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   portal:
-    build: php:8.2-fpm
-    container_name: myapp-portal
+    build: ./portal
     volumes:
-      - ./portal:/var/www/portal
+      - ./portal/src:/var/www/portal
+      - php-sessions:/tmp/sessions
+    networks:
+      - public-net
+      - private-net
+    environment:
+      DB_HOST: db
+      DB_NAME: corpdb
+      DB_USER: appuser
+      DB_PASS: SuperSecret123!
     depends_on:
-      - mysql
+      db:
+        condition: service_healthy
 
   api:
-    image: php:8.2-fpm
-    container_name: myapp-api
+    build: ./api
     volumes:
-      - ./api:/var/www/api
+      - ./api/src:/var/www/api
+    networks:
+      - public-net
+      - private-net
+    environment:
+      DB_HOST: db
+      DB_NAME: corpdb
+      DB_USER: appuser
+      DB_PASS: SuperSecret123!
     depends_on:
-      - mysql
+      db:
+        condition: service_healthy
+
+  staff:
+    build: ./staff
+    volumes:
+      - ./staff/src:/var/www/staff
+      - php-sessions:/tmp/sessions
+      - nginx-logs:/var/log/nginx:ro
+    networks:
+      - public-net
+      - private-net
+    environment:
+      DB_HOST: db
+      DB_NAME: corpdb
+      DB_USER: appuser
+      DB_PASS: SuperSecret123!
+    depends_on:
+      db:
+        condition: service_healthy
 
   internal-api:
-    image: php:8.2-fpm
-    container_name: myapp-internal-api
+    build: ./internal-api
     volumes:
-      - ./internal-api:/var/www/internal-api
+      - ./internal-api/src:/var/www/internal-api
+      - ./uploads:/var/www/uploads
+    # IMPORTANT: internal-api CHỈ nằm trong private-net — không accessible từ internet
+    networks:
+      - private-net
+    environment:
+      DB_HOST: db
+      DB_NAME: corpdb
+      DB_USER: appuser
+      DB_PASS: SuperSecret123!
     depends_on:
-      - mysql
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: corpdb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: SuperSecret123!
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db-data:/var/lib/mysql
+    networks:
+      - private-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "appuser", "-pSuperSecret123!"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+networks:
+  public-net:
+    driver: bridge
+  private-net:
+    driver: bridge
 
 volumes:
-  mysql-data:
+  db-data:
+  nginx-logs:
+  php-sessions:

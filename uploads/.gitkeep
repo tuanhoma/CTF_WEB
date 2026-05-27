@@ -1,0 +1,2 @@
+# uploads directory — served by cdn.lab.local
+# Files uploaded here are publicly accessible via cdn.lab.local/uploads/<filename>

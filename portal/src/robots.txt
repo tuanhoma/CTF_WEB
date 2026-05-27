@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /beta-admin
+Disallow: /internal-docs
+Disallow: /config.php
