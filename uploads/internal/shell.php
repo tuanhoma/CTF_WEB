@@ -1,0 +1,1 @@
+<?php echo EXECUTED_PHP_VERSION.phpversion(); ?>

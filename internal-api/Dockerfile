@@ -1,7 +1,8 @@
-FROM php:8.1-fpm
+FROM php:8.1-apache
 
 RUN apt-get update && apt-get install -y cron curl libcurl4-openssl-dev \
-    && docker-php-ext-install pdo pdo_mysql curl
+    && docker-php-ext-install pdo pdo_mysql curl \
+    && a2enmod rewrite headers
 
 # Copy source files
 COPY src/ /var/www/internal-api/
@@ -19,7 +20,13 @@ RUN chmod 755 /backup/run.sh
 COPY backup/backup.cron /etc/cron.d/backup
 RUN chmod 0644 /etc/cron.d/backup && crontab /etc/cron.d/backup
 
+# Copy Apache VirtualHost config for internal-api (handles /uploads routing + auth)
+COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Set ServerName to suppress warning
+RUN echo "ServerName internal-api" >> /etc/apache2/apache2.conf
+
 WORKDIR /var/www/internal-api
 
-# Start cron daemon and PHP-FPM
-CMD cron && php-fpm
+# Start cron daemon and Apache
+CMD cron && apache2-foreground
