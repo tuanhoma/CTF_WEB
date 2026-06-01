@@ -45,11 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
         <form method="POST" action="/register.php">
             <label>Username</label>
-            <input type="text" name="username" id="reg_username" required>
+            <input type="text" name="username" id="reg_username">
             <label>Email</label>
             <input type="email" name="email" id="reg_email">
             <label>Password</label>
-            <input type="password" name="password" id="reg_password" required>
+            <input type="password" name="password" id="reg_password">
             <button type="submit">Register</button>
         </form>
         <p class="hint">Already have an account? <a href="/login.php">Login</a></p>

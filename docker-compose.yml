@@ -73,6 +73,7 @@ services:
       - ./staff/src:/var/www/staff
       - php-sessions:/tmp/sessions
       - nginx-logs:/var/log/nginx:ro
+      - ./uploads:/var/www/uploads:ro
     networks:
       - public-net
       - private-net

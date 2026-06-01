@@ -6,7 +6,10 @@ if (!is_dir('/tmp/sessions')) {
     @mkdir('/tmp/sessions', 0777, true);
 }
 ini_set('session.save_path', '/tmp/sessions');
-ini_set('session.cookie_domain', '.lab.local');
+$host = $_SERVER['HTTP_HOST'] ?? '';
+if (strpos($host, '.lab.local') !== false) {
+    ini_set('session.cookie_domain', '.lab.local');
+}
 
 // VULN: HttpOnly = 0 — JS readable cookie (mirrors portal config)
 ini_set('session.cookie_httponly', 0);

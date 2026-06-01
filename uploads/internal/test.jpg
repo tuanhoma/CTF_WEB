@@ -1,1 +1,1 @@
-fake image 2
+<?php phpinfo(); ?>

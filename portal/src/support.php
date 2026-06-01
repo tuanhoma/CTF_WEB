@@ -101,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <th>Title</th>
                             <th>Status</th>
                             <th>Date</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -110,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <td><?= htmlspecialchars($t['title']) ?></td>
                                 <td><span class="badge"><?= htmlspecialchars($t['status']) ?></span></td>
                                 <td><?= htmlspecialchars($t['created_at']) ?></td>
+                                <td><a href="/ticket_view.php?id=<?= (int)$t['id'] ?>" class="btn-sm" style="background:#0056b3; color:white; padding:4px 10px; text-decoration:none; border-radius:4px; font-size:13px;">View</a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

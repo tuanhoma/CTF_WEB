@@ -47,14 +47,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
         <form method="POST" action="/login.php">
             <label>Username</label>
-            <input type="text" name="username" id="username" required autofocus>
+            <input type="text" name="username" id="username" autofocus>
             <label>Password</label>
-            <input type="password" name="password" id="password" required>
+            <input type="password" name="password" id="password">
             <button type="submit">Login</button>
         </form>
         <p class="hint">No account? <a href="/register.php">Register here</a></p>
     </div>
 </div>
 <script src="/static/app.js"></script>
+<script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+        console.log('Form is submitting...');
+        // Let it submit normally
+    });
+</script>
 </body>
 </html>

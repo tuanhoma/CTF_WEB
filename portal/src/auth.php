@@ -8,7 +8,11 @@ if (!is_dir('/tmp/sessions')) {
 ini_set('session.save_path', '/tmp/sessions');
 
 // VULN: cookie_domain = .lab.local — allows portal & staff to share same session cookie
-ini_set('session.cookie_domain', '.lab.local');
+// Sửa: Chỉ set domain .lab.local nếu host có chứa .lab.local (để LAN IP vẫn login được)
+$host = $_SERVER['HTTP_HOST'] ?? '';
+if (strpos($host, '.lab.local') !== false) {
+    ini_set('session.cookie_domain', '.lab.local');
+}
 
 // VULN: HttpOnly = 0 — JavaScript can read PHPSESSID cookie (required for session hijack)
 ini_set('session.cookie_httponly', 0);
