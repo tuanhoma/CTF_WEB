@@ -4,24 +4,39 @@ services:
   waf-proxy:
     image: bunkerity/bunkerweb:1.5.8
     container_name: ctf-waf
-    ports:
-      - "80:8080"
-      # - "443:8443" # Bị trùng cổng 443 với Wazuh Dashboard, tạm thời comment lại
+    # ports:
+    #   - "80:8080"
+    #   # - "443:8443" # Bị trùng cổng 443 với Wazuh Dashboard, tạm thời comment lại
     labels:
       - "bunkerweb.INSTANCE=yes"
     environment:
       - API_WHITELIST_IP=127.0.0.0/8 172.16.0.0/12 192.168.0.0/16 10.0.0.0/8
-      - SERVER_NAME=portal.lab.local staff.lab.local api.lab.local cdn.lab.local localhost
-      - USE_REVERSE_PROXY=yes
-      - REVERSE_PROXY_URL=/
-      - REVERSE_PROXY_HOST=http://ctf_web-nginx-1:80
+      - MULTISITE=yes
+      - USE_SERVE_FILES=no
+      - SERVER_NAME=portal.lab.local staff.lab.local api.lab.local
+      - PORTAL_LAB_LOCAL_USE_REVERSE_PROXY=yes
+      - PORTAL_LAB_LOCAL_REVERSE_PROXY_URL=/
+      - PORTAL_LAB_LOCAL_REVERSE_PROXY_HOST=http://portal:80
+      - STAFF_LAB_LOCAL_USE_REVERSE_PROXY=yes
+      - STAFF_LAB_LOCAL_REVERSE_PROXY_URL=/
+      - STAFF_LAB_LOCAL_REVERSE_PROXY_HOST=http://staff:80
+      - API_LAB_LOCAL_USE_REVERSE_PROXY=yes
+      - API_LAB_LOCAL_REVERSE_PROXY_URL=/
+      - API_LAB_LOCAL_REVERSE_PROXY_HOST=http://api:80
       - USE_MODSECURITY=yes
       - USE_MODSECURITY_CRS=yes
       - BAD_BEHAVIOR_THRESHOLD=10
       - USE_ANTIBOT=no
+      - DNS_RESOLVERS=127.0.0.11
+      - PORTAL_LAB_LOCAL_SERVE_FILES=no
+      - STAFF_LAB_LOCAL_SERVE_FILES=no
+      - API_LAB_LOCAL_SERVE_FILES=no
     volumes:
       - bw-data:/data
-      - ./waf-proxy/custom-rules.conf:/bunkerweb/configs/modsecurity/custom-rules.conf:ro
+      - ./waf-proxy/custom-rules.conf:/data/configs/modsecurity/custom-rules.conf:ro
+      - ./waf-proxy/configs/portal.lab.local:/data/configs/server-http/portal.lab.local:ro
+      - ./waf-proxy/configs/staff.lab.local:/data/configs/server-http/staff.lab.local:ro
+      - ./waf-proxy/configs/api.lab.local:/data/configs/server-http/api.lab.local:ro
     networks:
       - public-net
     restart: always
@@ -47,12 +62,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - CONTAINERS=1
+      - NETWORKS=1
+      - SERVICES=1
     networks:
       - public-net
     restart: always
 
   nginx:
     image: nginx:alpine
+    ports:
+      - "80:80"
     expose:
       - "80"
     depends_on:
@@ -60,6 +79,7 @@ services:
       - api
       - staff
       - internal-api
+      - waf-proxy
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
       - nginx-logs:/var/log/nginx
