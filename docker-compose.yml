@@ -1,10 +1,60 @@
 version: '3.8'
 
 services:
+  waf-proxy:
+    image: bunkerity/bunkerweb:1.5.8
+    container_name: ctf-waf
+    ports:
+      - "80:8080"
+      # - "443:8443" # Bị trùng cổng 443 với Wazuh Dashboard, tạm thời comment lại
+    labels:
+      - "bunkerweb.INSTANCE=yes"
+    environment:
+      - API_WHITELIST_IP=127.0.0.0/8 172.16.0.0/12 192.168.0.0/16 10.0.0.0/8
+      - SERVER_NAME=portal.lab.local staff.lab.local api.lab.local cdn.lab.local localhost
+      - USE_REVERSE_PROXY=yes
+      - REVERSE_PROXY_URL=/
+      - REVERSE_PROXY_HOST=http://ctf_web-nginx-1:80
+      - USE_MODSECURITY=yes
+      - USE_MODSECURITY_CRS=yes
+      - BAD_BEHAVIOR_THRESHOLD=10
+      - USE_ANTIBOT=no
+    volumes:
+      - bw-data:/data
+      - ./waf-proxy/custom-rules.conf:/bunkerweb/configs/modsecurity/custom-rules.conf:ro
+    networks:
+      - public-net
+    restart: always
+
+  waf-scheduler:
+    image: bunkerity/bunkerweb-scheduler:1.5.8
+    container_name: ctf-waf-scheduler
+    depends_on:
+      - waf-proxy
+      - waf-docker-proxy
+    environment:
+      - DOCKER_HOST=tcp://ctf-waf-docker-proxy:2375
+    volumes:
+      - bw-data:/data
+    networks:
+      - public-net
+    restart: always
+
+  waf-docker-proxy:
+    image: tecnativa/docker-socket-proxy:nightly
+    container_name: ctf-waf-docker-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - CONTAINERS=1
+    networks:
+      - public-net
+    restart: always
+
   nginx:
     image: nginx:alpine
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     depends_on:
       - portal
       - api
@@ -134,3 +184,4 @@ volumes:
   db-data:
   nginx-logs:
   php-sessions:
+  bw-data:
