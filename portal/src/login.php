@@ -20,9 +20,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Redirect admin/staff to staff panel
         if (in_array($user['role'], ['admin', 'staff'])) {
-            header('Location: http://staff.lab.local/');
+            $currentHost = $_SERVER['HTTP_HOST'] ?? '';
+            if (strpos($currentHost, '.lab.local') !== false) {
+                // Truy cập qua domain → redirect tới staff.lab.local
+                header('Location: http://staff.lab.local/');
+            } else {
+                // Truy cập qua IP (hotspot) → redirect tới /staff/ trên cùng host
+                header('Location: http://' . $currentHost . '/staff/');
+            }
+            http_response_code(302);
         } else {
             header('Location: /dashboard.php');
+            http_response_code(302);
         }
         exit;
     } else {
