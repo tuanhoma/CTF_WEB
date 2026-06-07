@@ -17,6 +17,7 @@ services:
       - PORTAL_LAB_LOCAL_USE_REVERSE_PROXY=yes
       - PORTAL_LAB_LOCAL_REVERSE_PROXY_URL=/
       - PORTAL_LAB_LOCAL_REVERSE_PROXY_HOST=http://portal:80
+      - PORTAL_LAB_LOCAL_CONTENT_SECURITY_POLICY=object-src 'none'; form-action 'self' http://staff.lab.local; frame-ancestors 'self';
       - STAFF_LAB_LOCAL_USE_REVERSE_PROXY=yes
       - STAFF_LAB_LOCAL_REVERSE_PROXY_URL=/
       - STAFF_LAB_LOCAL_REVERSE_PROXY_HOST=http://staff:80
@@ -24,7 +25,7 @@ services:
       - API_LAB_LOCAL_REVERSE_PROXY_URL=/
       - API_LAB_LOCAL_REVERSE_PROXY_HOST=http://api:80
       - USE_MODSECURITY=yes
-      - USE_MODSECURITY_CRS=yes
+      - USE_MODSECURITY_CRS=no
       - BAD_BEHAVIOR_THRESHOLD=10
       - USE_ANTIBOT=no
       - DNS_RESOLVERS=127.0.0.11
@@ -37,6 +38,7 @@ services:
       - ./waf-proxy/configs/portal.lab.local:/data/configs/server-http/portal.lab.local:ro
       - ./waf-proxy/configs/staff.lab.local:/data/configs/server-http/staff.lab.local:ro
       - ./waf-proxy/configs/api.lab.local:/data/configs/server-http/api.lab.local:ro
+      - ./logs/waf:/var/log/bunkerweb
     networks:
       - public-net
     restart: always
@@ -82,7 +84,7 @@ services:
       - waf-proxy
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
-      - nginx-logs:/var/log/nginx
+      - ./logs/nginx:/var/log/nginx
     networks:
       public-net:
         aliases:
@@ -109,6 +111,7 @@ services:
     volumes:
       - ./portal/src:/var/www/portal
       - php-sessions:/tmp/sessions
+      - ./logs/backend:/var/log/apache2
     networks:
       - public-net
       - private-net
@@ -125,6 +128,7 @@ services:
     build: ./api
     volumes:
       - ./api/src:/var/www/api
+      - ./logs/backend:/var/log/apache2
     networks:
       - public-net
       - private-net
@@ -142,8 +146,9 @@ services:
     volumes:
       - ./staff/src:/var/www/staff
       - php-sessions:/tmp/sessions
-      - nginx-logs:/var/log/nginx:ro
+      - ./logs/nginx:/var/log/nginx:ro
       - ./uploads:/var/www/uploads:ro
+      - ./logs/backend:/var/log/apache2
     networks:
       - public-net
       - private-net
@@ -164,6 +169,7 @@ services:
       - ./cdn/auth.php:/var/www/uploads/auth.php:ro
       - ./cdn/internal.php:/var/www/uploads/internal.php:ro
       - php-sessions:/tmp/sessions
+      - ./logs/backend:/var/log/apache2
     # IMPORTANT: internal-api CHỈ nằm trong private-net — không accessible từ internet
     networks:
       - private-net
@@ -194,14 +200,32 @@ services:
       timeout: 5s
       retries: 10
 
+  wazuh-agent:
+    build: ./wazuh-agent
+    container_name: ctf_web_wazuh_agent
+    hostname: ctf_web_agent
+    environment:
+      - WAZUH_MANAGER=single-node-wazuh.manager-1
+      - WAZUH_REGISTRATION_SERVER=single-node-wazuh.manager-1
+      - WAZUH_AGENT_GROUP=default
+    volumes:
+      - ./logs:/var/ossec/logs/ctf_web_logs:ro
+      - wazuh-agent-data:/var/ossec/data
+    networks:
+      - wazuh_net
+    restart: always
+
 networks:
   public-net:
     driver: bridge
   private-net:
     driver: bridge
+  wazuh_net:
+    name: single-node_default
+    external: true
 
 volumes:
   db-data:
-  nginx-logs:
   php-sessions:
   bw-data:
+  wazuh-agent-data:
