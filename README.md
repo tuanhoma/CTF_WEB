@@ -2,7 +2,7 @@
 
 Welcome to the **CTF Web Vuln Lab**! This is a comprehensive Web Application Security lab designed for Capture The Flag (CTF) challenges and penetration testing practice. The environment simulates a corporate web infrastructure with multiple interconnected services, a Web Application Firewall (WAF), and a centralized database.
 
-## 🏗️ Architecture
+## Architecture
 
 The lab is built using Docker Compose and consists of the following components:
 
@@ -15,7 +15,7 @@ The lab is built using Docker Compose and consists of the following components:
 - **Database**: A MySQL 8.0 database holding user credentials, support tickets, and personal notes.
 - **Wazuh Agent**: A security monitoring agent configured to ship logs to a Wazuh manager.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - [Docker](https://docs.docker.com/get-docker/)
@@ -46,14 +46,14 @@ The lab is built using Docker Compose and consists of the following components:
 
    *Note: The database container has a healthcheck configured. It might take a few moments for all services (like the portal and API) to become fully available after the database is healthy.*
 
-## 🎯 Target Services
+## Target Services
 
 Once the lab is running, you can access the services via your browser:
 - **Portal**: `http://portal.lab.local`
 - **Staff Interface**: `http://staff.lab.local`
 - **API Base**: `http://api.lab.local`
 
-## 🛡️ Educational Purpose
+## Educational Purpose
 
 The lab contains various intentional vulnerabilities typical in web applications (e.g., Cross-Site Scripting, weak cryptography, flawed logic, etc.). 
 
